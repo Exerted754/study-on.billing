@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 class RegisterController extends AbstractController
 {
@@ -65,7 +66,7 @@ class RegisterController extends AbstractController
         if (count($errors) > 0) {
             return $this->json([
                 'code' => 400,
-                'message' => (string) $errors,
+                'message' => $this->getErrorMessages($errors),
             ], 400);
         }
 
@@ -97,5 +98,16 @@ class RegisterController extends AbstractController
             'token' => $token,
             'roles' => $user->getRoles(),
         ], 201);
+    }
+
+    private function getErrorMessages(ConstraintViolationListInterface $errors): string
+    {
+        $messages = [];
+
+        foreach ($errors as $error) {
+            $messages[] = $error->getMessage();
+        }
+
+        return implode("\n", $messages);
     }
 }
