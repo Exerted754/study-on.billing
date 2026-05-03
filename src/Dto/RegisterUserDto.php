@@ -6,14 +6,20 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class RegisterUserDto
 {
-    #[Assert\NotBlank(message: 'Email обязателен!')]
-    #[Assert\Email(message: 'Некорректный email!')]
+    #[Assert\NotBlank(message: 'Введите email.')]
+    #[Assert\Email(message: 'Введите корректный email.')]
+    #[Assert\Length(
+        max: 180,
+        maxMessage: 'Email не должен быть длиннее {{ limit }} символов.'
+    )]
     public ?string $email = null;
 
-    #[Assert\NotBlank(message: 'Пароль обязателен!')]
+    #[Assert\NotBlank(message: 'Введите пароль.')]
     #[Assert\Length(
         min: 6,
-        minMessage: 'Пароль не должен содержать менее 6 символов!'
+        max: 4096,
+        minMessage: 'Пароль не должен содержать менее {{ limit }} символов.',
+        maxMessage: 'Пароль не должен быть длиннее {{ limit }} символов.'
     )]
     public ?string $password = null;
 }
