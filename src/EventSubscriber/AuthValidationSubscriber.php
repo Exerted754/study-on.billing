@@ -17,6 +17,15 @@ class AuthValidationSubscriber implements EventSubscriberInterface
     ) {
     }
 
+    private function createJsonResponse(array $data, int $statusCode): JsonResponse
+    {
+        $response = new JsonResponse(null, $statusCode);
+        $response->setEncodingOptions(JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_UNESCAPED_UNICODE);
+        $response->setData($data);
+
+        return $response;
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -43,7 +52,7 @@ class AuthValidationSubscriber implements EventSubscriberInterface
         $data = json_decode($request->getContent(), true);
 
         if (!is_array($data)) {
-            $event->setResponse(new JsonResponse([
+            $event->setResponse($this->createJsonResponse([
                 'code' => 400,
                 'message' => 'Некорректный JSON.',
             ], 400));
@@ -58,7 +67,7 @@ class AuthValidationSubscriber implements EventSubscriberInterface
         $errors = $this->validator->validate($dto);
 
         if (count($errors) > 0) {
-            $event->setResponse(new JsonResponse([
+            $event->setResponse($this->createJsonResponse([
                 'code' => 400,
                 'message' => $this->getErrorMessages($errors),
             ], 400));

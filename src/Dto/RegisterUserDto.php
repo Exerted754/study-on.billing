@@ -17,7 +17,7 @@ class RegisterUserDto
     #[Assert\NotBlank(message: 'Введите пароль.')]
     #[Assert\Length(
         min: 6,
-        max: 4096,
+        max: 20,
         minMessage: 'Пароль не должен содержать менее {{ limit }} символов.',
         maxMessage: 'Пароль не должен быть длиннее {{ limit }} символов.'
     )]

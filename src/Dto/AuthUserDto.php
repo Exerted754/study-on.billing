@@ -16,7 +16,7 @@ class AuthUserDto
 
     #[Assert\NotBlank(message: 'Введите пароль.')]
     #[Assert\Length(
-        max: 4096,
+        max: 20,
         maxMessage: 'Пароль не должен быть длиннее {{ limit }} символов.'
     )]
     public ?string $password = null;
