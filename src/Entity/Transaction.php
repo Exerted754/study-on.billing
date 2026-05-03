@@ -6,7 +6,7 @@ use App\Repository\TransactionRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TransactionRepository::class)]
-#[ORM\Table(name: 'transaction')]
+#[ORM\Table(name: 'billing_transaction')]
 class Transaction
 {
     public const TYPE_DEPOSIT = 'deposit';

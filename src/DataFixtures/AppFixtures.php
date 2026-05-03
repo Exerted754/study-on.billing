@@ -3,16 +3,23 @@
 namespace App\DataFixtures;
 
 use App\Entity\User;
+use App\Entity\Course;
+use App\Service\PaymentService;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
     public function __construct(
-        private UserPasswordHasherInterface $passwordHasher
+        private UserPasswordHasherInterface $passwordHasher,
+        private PaymentService $paymentService,
+        #[Autowire('%initial_balance%')]
+        private float $initialBalance
     ) {
     }
+
     public function load(ObjectManager $manager): void
     {
         $user = new User();
@@ -33,6 +40,28 @@ class AppFixtures extends Fixture
         );
         $manager->persist($admin);
 
+        $course1 = new Course();
+        $course1->setCode('symfony-basics');
+        $course1->setType(Course::TYPE_BUY);
+        $course1->setPrice(199.99);
+
+        $course2 = new Course();
+        $course2->setCode('php-basics');
+        $course2->setType(Course::TYPE_RENT);
+        $course2->setPrice(99.99);
+
+        $course3 = new Course();
+        $course3->setCode('html-css');
+        $course3->setType(Course::TYPE_FREE);
+        $course3->setPrice(null);
+
+        $manager->persist($course1);
+        $manager->persist($course2);
+        $manager->persist($course3);
+
         $manager->flush();
+
+        $this->paymentService->deposit($user, $this->initialBalance);
+        $this->paymentService->deposit($admin, $this->initialBalance);
     }
 }
