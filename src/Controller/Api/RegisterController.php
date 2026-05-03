@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Dto\RegisterUserDto;
 use App\Entity\User;
+use App\Entity\RefreshToken;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
@@ -16,6 +17,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenManagerInterface;
 
 class RegisterController extends AbstractController
 {
@@ -52,7 +54,8 @@ class RegisterController extends AbstractController
         ValidatorInterface $validator,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
-        JWTTokenManagerInterface $jwtManager
+        JWTTokenManagerInterface $jwtManager,
+        RefreshTokenManagerInterface $refreshTokenManager
     ): JsonResponse {
         /** @var RegisterUserDto $dto */
         $dto = $serializer->deserialize(
@@ -94,8 +97,15 @@ class RegisterController extends AbstractController
 
         $token = $jwtManager->create($user);
 
-        return $this->json([
+        $refreshToken = $this->createRefreshToken(
+            $user,
+            $refreshTokenManager,
+            $validator
+        );
+
+        return $this->createJsonResponse([
             'token' => $token,
+            'refresh_token' => $refreshToken,
             'roles' => $user->getRoles(),
         ], 201);
     }
@@ -118,5 +128,24 @@ class RegisterController extends AbstractController
         $response->setData($data);
 
         return $response;
+    }
+
+    private function createRefreshToken(
+        User $user,
+        RefreshTokenManagerInterface $refreshTokenManager,
+        ValidatorInterface $validator
+    ): string {
+        $refreshToken = new RefreshToken();
+        $refreshToken->setUsername($user->getUserIdentifier());
+        $refreshToken->setValid(new \DateTime('+7 days'));
+
+        do {
+            $refreshTokenValue = bin2hex(random_bytes(64));
+            $refreshToken->setRefreshToken($refreshTokenValue);
+        } while (count($validator->validate($refreshToken)) > 0);
+
+        $refreshTokenManager->save($refreshToken);
+
+        return $refreshTokenValue;
     }
 }
