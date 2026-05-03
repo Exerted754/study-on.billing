@@ -64,7 +64,7 @@ class RegisterController extends AbstractController
         $errors = $validator->validate($dto);
 
         if (count($errors) > 0) {
-            return $this->json([
+            return $this->createJsonResponse([
                 'code' => 400,
                 'message' => $this->getErrorMessages($errors),
             ], 400);
@@ -75,7 +75,7 @@ class RegisterController extends AbstractController
         ]);
 
         if ($existingUser) {
-            return $this->json([
+            return $this->createJsonResponse([
                 'code' => 400,
                 'message' => 'Пользователь с таким email уже существует',
             ], 400);
@@ -109,5 +109,14 @@ class RegisterController extends AbstractController
         }
 
         return implode("\n", $messages);
+    }
+
+    private function createJsonResponse(array $data, int $statusCode): JsonResponse
+    {
+        $response = new JsonResponse(null, $statusCode);
+        $response->setEncodingOptions(JsonResponse::DEFAULT_ENCODING_OPTIONS | JSON_UNESCAPED_UNICODE);
+        $response->setData($data);
+
+        return $response;
     }
 }
