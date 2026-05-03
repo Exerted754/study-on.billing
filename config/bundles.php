@@ -13,4 +13,5 @@ return [
     Nelmio\ApiDocBundle\NelmioApiDocBundle::class => ['all' => true],
     JMS\SerializerBundle\JMSSerializerBundle::class => ['all' => true],
     DAMA\DoctrineTestBundle\DAMADoctrineTestBundle::class => ['test' => true],
+    Gesdinet\JWTRefreshTokenBundle\GesdinetJWTRefreshTokenBundle::class => ['all' => true],
 ];
