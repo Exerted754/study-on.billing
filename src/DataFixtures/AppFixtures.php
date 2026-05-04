@@ -41,17 +41,17 @@ class AppFixtures extends Fixture
         $manager->persist($admin);
 
         $course1 = new Course();
-        $course1->setCode('symfony-basics');
+        $course1->setCode('php-basic');
         $course1->setType(Course::TYPE_BUY);
         $course1->setPrice(199.99);
 
         $course2 = new Course();
-        $course2->setCode('php-basics');
+        $course2->setCode('symfony-start');
         $course2->setType(Course::TYPE_RENT);
         $course2->setPrice(99.99);
 
         $course3 = new Course();
-        $course3->setCode('html-css');
+        $course3->setCode('postgresql-base');
         $course3->setType(Course::TYPE_FREE);
         $course3->setPrice(null);
 
