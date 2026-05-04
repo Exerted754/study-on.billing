@@ -28,14 +28,14 @@ class CourseApiTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $client->request('GET', '/api/v1/courses/symfony-basics');
+        $client->request('GET', '/api/v1/courses/php-basic');
 
         $this->assertResponseIsSuccessful();
         $this->assertJson($client->getResponse()->getContent());
 
         $data = json_decode($client->getResponse()->getContent(), true);
 
-        $this->assertSame('symfony-basics', $data['code']);
+        $this->assertSame('php-basic', $data['code']);
         $this->assertSame('buy', $data['type']);
         $this->assertSame(199.99, $data['price']);
     }

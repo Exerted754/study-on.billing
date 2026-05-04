@@ -39,7 +39,7 @@ class PaymentApiTest extends WebTestCase
 
         $client->request(
             'POST',
-            '/api/v1/courses/symfony-basics/pay',
+            '/api/v1/courses/php-basic/pay',
             [],
             [],
             ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
@@ -62,7 +62,7 @@ class PaymentApiTest extends WebTestCase
 
         $client->request(
             'POST',
-            '/api/v1/courses/php-basics/pay',
+            '/api/v1/courses/symfony-start/pay',
             [],
             [],
             ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
@@ -85,7 +85,7 @@ class PaymentApiTest extends WebTestCase
 
         $client->request(
             'POST',
-            '/api/v1/courses/html-css/pay',
+            '/api/v1/courses/postgresql-base/pay',
             [],
             [],
             ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
@@ -103,7 +103,7 @@ class PaymentApiTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $client->request('POST', '/api/v1/courses/symfony-basics/pay');
+        $client->request('POST', '/api/v1/courses/php-basic/pay');
 
         $this->assertResponseStatusCodeSame(401);
         $this->assertJson($client->getResponse()->getContent());
@@ -144,7 +144,7 @@ class PaymentApiTest extends WebTestCase
 
         $client->request(
             'POST',
-            '/api/v1/courses/symfony-basics/pay',
+            '/api/v1/courses/php-basic/pay',
             [],
             [],
             ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]

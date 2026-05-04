@@ -94,7 +94,7 @@ class TransactionApiTest extends WebTestCase
 
         $client->request(
             'POST',
-            '/api/v1/courses/symfony-basics/pay',
+            '/api/v1/courses/php-basic/pay',
             [],
             [],
             ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
@@ -104,7 +104,7 @@ class TransactionApiTest extends WebTestCase
 
         $client->request(
             'GET',
-            '/api/v1/transactions?filter[course_code]=symfony-basics',
+            '/api/v1/transactions?filter[course_code]=php-basic',
             [],
             [],
             ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
@@ -117,7 +117,7 @@ class TransactionApiTest extends WebTestCase
         $this->assertNotEmpty($data);
 
         foreach ($data as $transaction) {
-            $this->assertSame('symfony-basics', $transaction['course_code']);
+            $this->assertSame('php-basic', $transaction['course_code']);
         }
     }
 }
