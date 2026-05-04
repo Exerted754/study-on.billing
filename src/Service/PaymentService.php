@@ -6,11 +6,13 @@ use App\Entity\Course;
 use App\Entity\Transaction;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\TransactionRepository;
 
 class PaymentService
 {
     public function __construct(
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private TransactionRepository $transactionRepository
     ) {
     }
 
@@ -33,6 +35,16 @@ class PaymentService
     {
         if ($course->getPrice() === null || $course->getPrice() <= 0) {
             throw new \Exception('Курс бесплатный');
+        }
+
+        $activePayment = $this->transactionRepository->findActivePayment($user, $course);
+
+        if ($activePayment !== null) {
+            if ($course->getType() === Course::TYPE_RENT) {
+                throw new \Exception('Курс уже арендован');
+            }
+
+            throw new \Exception('Курс уже оплачен');
         }
 
         if ($user->getBalance() < $course->getPrice()) {

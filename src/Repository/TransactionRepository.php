@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Transaction;
 use App\Entity\User;
+use App\Entity\Course;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -42,5 +43,22 @@ class TransactionRepository extends ServiceEntityRepository
         }
 
         return $qb->getQuery()->getResult();
+    }
+
+    public function findActivePayment(User $user, Course $course): ?Transaction
+    {
+        return $this->createQueryBuilder('t')
+            ->andWhere('t.user = :user')
+            ->andWhere('t.course = :course')
+            ->andWhere('t.type = :type')
+            ->andWhere('t.expiresAt IS NULL OR t.expiresAt > :now')
+            ->setParameter('user', $user)
+            ->setParameter('course', $course)
+            ->setParameter('type', Transaction::TYPE_PAYMENT)
+            ->setParameter('now', new \DateTimeImmutable())
+            ->orderBy('t.createdAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }
