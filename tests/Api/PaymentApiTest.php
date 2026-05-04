@@ -157,4 +157,66 @@ class PaymentApiTest extends WebTestCase
             $client->getResponse()->getContent()
         );
     }
+
+    public function testCannotPayAlreadyPaidCourse(): void
+    {
+        $client = static::createClient();
+        $token = $this->getToken($client);
+
+        $client->request(
+            'POST',
+            '/api/v1/courses/php-basic/pay',
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseIsSuccessful();
+
+        $client->request(
+            'POST',
+            '/api/v1/courses/php-basic/pay',
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseStatusCodeSame(406);
+        $this->assertJson($client->getResponse()->getContent());
+        $this->assertStringContainsString(
+            'Курс уже оплачен',
+            $client->getResponse()->getContent()
+        );
+    }
+
+    public function testCannotPayAlreadyRentedCourse(): void
+    {
+        $client = static::createClient();
+        $token = $this->getToken($client);
+
+        $client->request(
+            'POST',
+            '/api/v1/courses/symfony-start/pay',
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseIsSuccessful();
+
+        $client->request(
+            'POST',
+            '/api/v1/courses/symfony-start/pay',
+            [],
+            [],
+            ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseStatusCodeSame(406);
+        $this->assertJson($client->getResponse()->getContent());
+        $this->assertStringContainsString(
+            'Курс уже арендован',
+            $client->getResponse()->getContent()
+        );
+    }
 }
