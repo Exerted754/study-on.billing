@@ -6,7 +6,11 @@ use App\Entity\Course;
 use App\Entity\User;
 use OpenApi\Attributes as OA;
 use App\Service\PaymentService;
+use App\Dto\CourseDto;
 use App\Repository\CourseRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
@@ -78,6 +82,7 @@ class CourseController extends AbstractController
     {
         $data = [
             'code' => $course->getCode(),
+            'title' => $course->getTitle(),
             'type' => $course->getType(),
         ];
 
@@ -156,6 +161,158 @@ class CourseController extends AbstractController
         return $this->createJsonResponse($data, Response::HTTP_OK);
     }
 
+    #[OA\Post(
+        path: '/api/v1/courses',
+        description: 'Создание курса в биллинге',
+        summary: 'Создание курса',
+        security: [['Bearer' => []]]
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'Курс успешно создан'
+    )]
+    #[OA\Response(
+        response: 400,
+        description: 'Ошибка валидации'
+    )]
+    #[OA\Response(
+        response: 403,
+        description: 'Доступ запрещён'
+    )]
+    #[Route('', name: 'api_course_create', methods: ['POST'])]
+    #[IsGranted('ROLE_SUPER_ADMIN')]
+    public function create(
+        Request $request,
+        CourseRepository $courseRepository,
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator
+    ): JsonResponse {
+        $dto = $this->createCourseDto($request);
+
+        $errors = $validator->validate($dto);
+
+        if (count($errors) > 0) {
+            return $this->createJsonResponse([
+                'code' => Response::HTTP_BAD_REQUEST,
+                'message' => $this->getErrorMessages($errors),
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($courseRepository->findOneBy(['code' => $dto->code])) {
+            return $this->createJsonResponse([
+                'code' => Response::HTTP_BAD_REQUEST,
+                'message' => 'Курс с таким кодом уже существует.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($dto->type !== Course::TYPE_FREE && ($dto->price === null || $dto->price <= 0)) {
+            return $this->createJsonResponse([
+                'code' => Response::HTTP_BAD_REQUEST,
+                'message' => 'Для платного курса необходимо указать стоимость.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $course = new Course();
+        $course->setCode($dto->code);
+        $course->setTitle($dto->title);
+        $course->setType($dto->type);
+        $course->setPrice($dto->type === Course::TYPE_FREE ? null : $dto->price);
+
+        $entityManager->persist($course);
+        $entityManager->flush();
+
+        return $this->createJsonResponse([
+            'success' => true,
+        ], Response::HTTP_CREATED);
+    }
+
+    #[OA\Post(
+        path: '/api/v1/courses/{code}',
+        description: 'Редактирование курса в биллинге',
+        summary: 'Редактирование курса',
+        security: [['Bearer' => []]]
+    )]
+    #[OA\Parameter(
+        name: 'code',
+        description: 'Текущий символьный код курса',
+        in: 'path',
+        required: true,
+        schema: new OA\Schema(type: 'string')
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Курс успешно обновлён'
+    )]
+    #[OA\Response(
+        response: 400,
+        description: 'Ошибка валидации'
+    )]
+    #[OA\Response(
+        response: 403,
+        description: 'Доступ запрещён'
+    )]
+    #[OA\Response(
+        response: 404,
+        description: 'Курс не найден'
+    )]
+    #[Route('/{code}', name: 'api_course_update', methods: ['POST'])]
+    #[IsGranted('ROLE_SUPER_ADMIN')]
+    public function update(
+        string $code,
+        Request $request,
+        CourseRepository $courseRepository,
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator
+    ): JsonResponse {
+        $course = $courseRepository->findOneBy([
+            'code' => $code,
+        ]);
+
+        if (!$course) {
+            throw $this->createNotFoundException('Курс не найден.');
+        }
+
+        $dto = $this->createCourseDto($request);
+
+        $errors = $validator->validate($dto);
+
+        if (count($errors) > 0) {
+            return $this->createJsonResponse([
+                'code' => Response::HTTP_BAD_REQUEST,
+                'message' => $this->getErrorMessages($errors),
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $courseWithNewCode = $courseRepository->findOneBy([
+            'code' => $dto->code,
+        ]);
+
+        if ($courseWithNewCode !== null && $courseWithNewCode->getId() !== $course->getId()) {
+            return $this->createJsonResponse([
+                'code' => Response::HTTP_BAD_REQUEST,
+                'message' => 'Курс с таким кодом уже существует.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($dto->type !== Course::TYPE_FREE && ($dto->price === null || $dto->price <= 0)) {
+            return $this->createJsonResponse([
+                'code' => Response::HTTP_BAD_REQUEST,
+                'message' => 'Для платного курса необходимо указать стоимость.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $course->setCode($dto->code);
+        $course->setTitle($dto->title);
+        $course->setType($dto->type);
+        $course->setPrice($dto->type === Course::TYPE_FREE ? null : $dto->price);
+
+        $entityManager->flush();
+
+        return $this->createJsonResponse([
+            'success' => true,
+        ], Response::HTTP_OK);
+    }
+
     private function createJsonResponse(array $data, int $statusCode): JsonResponse
     {
         $response = new JsonResponse(null, $statusCode);
@@ -163,5 +320,33 @@ class CourseController extends AbstractController
         $response->setData($data);
 
         return $response;
+    }
+
+    private function createCourseDto(Request $request): CourseDto
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        $dto = new CourseDto();
+        $dto->type = $data['type'] ?? null;
+        $dto->title = $data['title'] ?? null;
+        $dto->code = $data['code'] ?? null;
+        $dto->price = isset($data['price']) ? (float) $data['price'] : null;
+
+        return $dto;
+    }
+
+    private function getErrorMessages(iterable $errors): string
+    {
+        $messages = [];
+
+        foreach ($errors as $error) {
+            $messages[] = $error->getMessage();
+        }
+
+        return implode("\n", $messages);
     }
 }

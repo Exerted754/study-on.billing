@@ -47,7 +47,7 @@ class PaymentService
             throw new \Exception('Курс уже оплачен');
         }
 
-        if ($user->getBalance() < $course->getPrice()) {
+        if ($user->getBalance() <= $course->getPrice()) {
             throw new \Exception('На вашем счету недостаточно средств');
         }
 

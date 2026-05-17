@@ -24,6 +24,9 @@ class Course
     #[ORM\Column(length: 20)]
     private ?string $type = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $title = null;
+
     #[ORM\Column(nullable: true)]
     private ?float $price = null;
 
@@ -52,6 +55,18 @@ class Course
     public function setType(string $type): static
     {
         $this->type = $type;
+
+        return $this;
+    }
+
+    public function getTitle(): ?string
+    {
+        return $this->title;
+    }
+
+    public function setTitle(string $title): static
+    {
+        $this->title = $title;
 
         return $this;
     }
