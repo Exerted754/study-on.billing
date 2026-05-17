@@ -1,0 +1,51 @@
+{% extends 'email.html.twig' %}
+
+{% block title %}Отчет об оплаченных курсах{% endblock %}
+
+{% block body %}
+    <p>
+        Отчет об оплаченных курсах за период
+        {{ from|date('d.m.Y') }} - {{ to|date('d.m.Y') }}
+    </p>
+
+    {% if rows|length > 0 %}
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+            <thead>
+                <tr>
+                    <th align="left">Название курса</th>
+                    <th align="left">Тип курса</th>
+                    <th align="left">Число аренд/покупок</th>
+                    <th align="left">Общая сумма</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td>{{ row.title }}</td>
+                        <td>
+                            {% if row.type == 'buy' %}
+                                Покупка
+                            {% elseif row.type == 'rent' %}
+                                Аренда
+                            {% elseif row.type == 'free' %}
+                                Бесплатный
+                            {% else %}
+                                {{ row.type }}
+                            {% endif %}
+                        </td>
+                        <td>{{ row.paymentsCount }}</td>
+                        <td>{{ row.totalAmount|number_format(2, '.', ' ') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="3" align="right">Итого:</th>
+                    <th align="left">{{ total|number_format(2, '.', ' ') }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    {% else %}
+        <p>Оплат за период нет.</p>
+    {% endif %}
+{% endblock %}

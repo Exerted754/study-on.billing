@@ -1,0 +1,26 @@
+{% extends 'email.html.twig' %}
+
+{% block title %}Срок аренды курса подходит к концу{% endblock %}
+
+{% block body %}
+    <p>
+        Уважаемый клиент! У вас есть курсы, срок аренды которых подходит к концу:
+    </p>
+
+    <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+        <thead>
+            <tr>
+                <th align="left">Название курса</th>
+                <th align="left">Действует до</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.course.title }}</td>
+                    <td>{{ transaction.expiresAt|date('d.m.Y H:i') }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

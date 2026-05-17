@@ -9,7 +9,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 
 #[AsCommand(name: 'payment:report')]
 class PaymentReportCommand extends Command
@@ -38,13 +38,17 @@ class PaymentReportCommand extends Command
             $total += (float) $row['totalAmount'];
         }
 
-        $message = $this->buildMessage($from, $to, $rows, $total);
-
-        $email = (new Email())
+        $email = (new TemplatedEmail())
             ->from($this->mailerFrom)
             ->to($this->reportEmail)
             ->subject('Отчет об оплаченных курсах')
-            ->text($message);
+            ->htmlTemplate('email/payment_report.html.twig')
+            ->context([
+                'from' => $from,
+                'to' => $to,
+                'rows' => $rows,
+                'total' => $total,
+            ]);
 
         $this->mailer->send($email);
 

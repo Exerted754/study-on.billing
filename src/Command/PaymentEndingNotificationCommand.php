@@ -10,7 +10,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Email;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 
 #[AsCommand(name: 'payment:ending:notification')]
 class PaymentEndingNotificationCommand extends Command
@@ -56,13 +56,14 @@ class PaymentEndingNotificationCommand extends Command
         $sentCount = 0;
 
         foreach ($transactionsByEmail as $email => $userTransactions) {
-            $message = $this->buildMessage($userTransactions);
-
-            $mail = (new Email())
+            $mail = (new TemplatedEmail())
                 ->from($this->mailerFrom)
                 ->to($email)
                 ->subject('Срок аренды курса подходит к концу')
-                ->text($message);
+                ->htmlTemplate('email/rent_ending.html.twig')
+                ->context([
+                    'transactions' => $userTransactions,
+                ]);
 
             $this->mailer->send($mail);
 
