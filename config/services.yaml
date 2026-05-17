@@ -8,6 +8,8 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     initial_balance: 1000
+    report_email: '%env(REPORT_EMAIL)%'
+    mailer_from: '%env(MAILER_FROM)%'
 
 services:
     # default configuration for services in *this* file

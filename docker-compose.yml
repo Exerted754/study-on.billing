@@ -38,6 +38,10 @@ services:
       - COMPOSER_ALLOW_SUPERUSER=1
     links:
       - postgres
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "8025:8025"
 
 ###> doctrine/doctrine-bundle ###
   database:

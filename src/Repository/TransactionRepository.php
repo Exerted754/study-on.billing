@@ -61,4 +61,52 @@ class TransactionRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function findRentPaymentsEndingTomorrow(): array
+    {
+        $from = new \DateTimeImmutable('tomorrow 00:00:00');
+        $to = $from->modify('+1 day');
+
+        return $this->createQueryBuilder('t')
+            ->leftJoin('t.user', 'u')
+            ->addSelect('u')
+            ->leftJoin('t.course', 'c')
+            ->addSelect('c')
+            ->andWhere('t.type = :type')
+            ->andWhere('c.type = :courseType')
+            ->andWhere('t.expiresAt >= :from')
+            ->andWhere('t.expiresAt < :to')
+            ->setParameter('type', Transaction::TYPE_PAYMENT)
+            ->setParameter('courseType', Course::TYPE_RENT)
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->orderBy('u.email', 'ASC')
+            ->addOrderBy('t.expiresAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function getPaymentsReport(
+        \DateTimeImmutable $from,
+        \DateTimeImmutable $to
+    ): array {
+        return $this->createQueryBuilder('t')
+            ->select('c.title AS title')
+            ->addSelect('c.type AS type')
+            ->addSelect('COUNT(t.id) AS paymentsCount')
+            ->addSelect('SUM(t.amount) AS totalAmount')
+            ->innerJoin('t.course', 'c')
+            ->andWhere('t.type = :type')
+            ->andWhere('t.createdAt >= :from')
+            ->andWhere('t.createdAt < :to')
+            ->setParameter('type', Transaction::TYPE_PAYMENT)
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->groupBy('c.id')
+            ->addGroupBy('c.title')
+            ->addGroupBy('c.type')
+            ->orderBy('c.title', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+    }
 }
