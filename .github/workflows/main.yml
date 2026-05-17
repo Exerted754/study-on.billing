@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare env files
+        run: |
+          cat > .env.local <<EOF
+          APP_ENV=dev
+          APP_SECRET=test
+          DATABASE_URL="postgresql://pguser:pguser@postgres:5432/study_on"
+          JWT_SECRET_KEY="%kernel.project_dir%/config/jwt/private.pem"
+          JWT_PUBLIC_KEY="%kernel.project_dir%/config/jwt/public.pem"
+          JWT_PASSPHRASE="test"
+          MAILER_DSN=null://null
+          REPORT_EMAIL=admin@study-on.local
+          MAILER_FROM=study-on-billing@study-on.local
+          EOF
+
+          cat > .env.test.local <<EOF
+          APP_ENV=test
+          APP_SECRET=test
+          DATABASE_URL="postgresql://pguser:pguser@postgres:5432/study_on_test"
+          JWT_SECRET_KEY="%kernel.project_dir%/config/jwt/private.pem"
+          JWT_PUBLIC_KEY="%kernel.project_dir%/config/jwt/public.pem"
+          JWT_PASSPHRASE="test"
+          MAILER_DSN=null://null
+          REPORT_EMAIL=admin@study-on.local
+          MAILER_FROM=study-on-billing@study-on.local
+          EOF
+
+      - name: Build containers
+        run: |
+          docker compose build
+          docker compose up -d
+          docker compose ps
+
+      - name: Install dependencies
+        run: |
+          docker compose exec -T php composer install --no-interaction --prefer-dist
+
+      - name: Generate JWT keys
+        run: |
+          docker compose exec -T php bin/console lexik:jwt:generate-keypair --skip-if-exists
+
+      - name: Prepare test database
+        run: |
+          docker compose exec -T php bin/console doctrine:database:drop --env=test --if-exists --force || true
+          docker compose exec -T php bin/console doctrine:database:create --env=test
+          docker compose exec -T php bin/console doctrine:migrations:migrate --env=test -n
+          docker compose exec -T php bin/console doctrine:fixtures:load --env=test -n
+
+      - name: Run PHPUnit
+        run: |
+          docker compose exec -T php bin/phpunit
