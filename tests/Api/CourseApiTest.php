@@ -21,6 +21,7 @@ class CourseApiTest extends WebTestCase
         $this->assertNotEmpty($data);
 
         $this->assertArrayHasKey('code', $data[0]);
+        $this->assertArrayHasKey('title', $data[0]);
         $this->assertArrayHasKey('type', $data[0]);
     }
 
@@ -36,6 +37,7 @@ class CourseApiTest extends WebTestCase
         $data = json_decode($client->getResponse()->getContent(), true);
 
         $this->assertSame('php-basic', $data['code']);
+        $this->assertSame('Основы PHP', $data['title']);
         $this->assertSame('buy', $data['type']);
         $this->assertSame(199.99, $data['price']);
     }
